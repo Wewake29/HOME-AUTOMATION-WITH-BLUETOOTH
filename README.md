@@ -69,4 +69,8 @@ IoT Projects – integrate with cloud databases for remote access.
 
 Educational Use – learn sensor interfacing, mobile app development, and wireless communication.
 
+*OUTPUT:
+
+![Image](https://github.com/user-attachments/assets/5838372c-bf04-48a4-9751-5c0ede7a6243)
+
 

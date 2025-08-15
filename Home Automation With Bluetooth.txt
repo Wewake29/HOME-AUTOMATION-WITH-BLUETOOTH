@@ -1,0 +1,125 @@
+// --- Home Automation Code for Arduino Uno ---
+// This code controls two relays via an HC-05 Bluetooth module and two push buttons.
+
+// Include the SoftwareSerial library for communication with the Bluetooth module.
+#include <SoftwareSerial.h>
+
+// Define the pins for the Bluetooth module (RX/TX)
+// The Bluetooth module's TX pin is connected to Arduino's bluetoothRx pin.
+// The Bluetooth module's RX pin is connected to Arduino's bluetoothTx pin.
+const int bluetoothRx = 10;
+const int bluetoothTx = 11;
+
+// Define the pins for the relays
+// Use pins 2 and 3 as they are available on Arduino Uno.
+const int relay1 = 2;
+const int relay2 = 3;
+
+// Define the pins for the manual push buttons
+// Use pins 4 and 5.
+const int button1 = 4;
+const int button2 = 5;
+
+// Create a SoftwareSerial object to talk to the HC-05 module.
+SoftwareSerial btSerial(bluetoothRx, bluetoothTx);
+
+// Variables to store the current state of the relays for button toggle logic
+bool relay1State = false;
+bool relay2State = false;
+
+// Variable to read incoming data from the Bluetooth module
+char bluetoothData;
+
+void setup() {
+  // Start the hardware serial monitor for debugging.
+  // Set the baud rate to 9600 for the Serial Monitor.
+  Serial.begin(9600);
+  Serial.println("Bluetooth Home Automation Ready");
+
+  // Start the software serial communication with the Bluetooth module.
+  // The default baud rate for the HC-05 is typically 9600.
+  btSerial.begin(9600);
+  
+  // Set the relay pins as OUTPUTs.
+  pinMode(relay1, OUTPUT);
+  pinMode(relay2, OUTPUT);
+
+  // Set the button pins as INPUT_PULLUP.
+  // This uses the Arduino's internal pull-up resistor, simplifying wiring.
+  // The button is active LOW (when pressed, the pin reads 0V).
+  pinMode(button1, INPUT_PULLUP);
+  pinMode(button2, INPUT_PULLUP);
+  
+  // Ensure all relays are initially turned off.
+  digitalWrite(relay1, LOW);
+  digitalWrite(relay2, LOW);
+}
+
+void loop() {
+  // --- Bluetooth Control Logic ---
+  // Check if there is data available from the Bluetooth module.
+  if (btSerial.available()) {
+    // Read the incoming byte.
+    bluetoothData = btSerial.read();
+
+    // Debugging: Print the received character to the serial monitor.
+    Serial.print("Received: ");
+    Serial.println(bluetoothData);
+
+    // Control Relay 1 based on the received character
+    if (bluetoothData == '1') {
+      digitalWrite(relay1, HIGH); // Turn Relay 1 ON
+      relay1State = true;
+      Serial.println("Relay 1 ON");
+    } else if (bluetoothData == 'a') {
+      digitalWrite(relay1, LOW);  // Turn Relay 1 OFF
+      relay1State = false;
+      Serial.println("Relay 1 OFF");
+    }
+
+    // Control Relay 2 based on the received character
+    if (bluetoothData == '2') {
+      digitalWrite(relay2, HIGH); // Turn Relay 2 ON
+      relay2State = true;
+      Serial.println("Relay 2 ON");
+    } else if (bluetoothData == 'b') {
+      digitalWrite(relay2, LOW);  // Turn Relay 2 OFF
+      relay2State = false;
+      Serial.println("Relay 2 OFF");
+    }
+  }
+
+  // --- Manual Button Control Logic ---
+  // A button press will toggle the state of its corresponding relay.
+  // The buttons are active LOW because of INPUT_PULLUP.
+  
+  // Control Relay 1 with Button 1
+  if (digitalRead(button1) == LOW) {
+    // A delay is added to prevent rapid toggling (debouncing)
+    delay(100); 
+    // If the button is still pressed, toggle the relay's state.
+    if (digitalRead(button1) == LOW) {
+      relay1State = !relay1State; // Invert the state
+      digitalWrite(relay1, relay1State ? HIGH : LOW); // Update the relay
+      Serial.print("Relay 1 toggled to: ");
+      Serial.println(relay1State ? "ON" : "OFF");
+      // Wait for the button to be released to prevent multiple toggles.
+      while(digitalRead(button1) == LOW); 
+    }
+  }
+
+  // Control Relay 2 with Button 2
+  if (digitalRead(button2) == LOW) {
+    // Debounce delay
+    delay(100);
+    // If the button is still pressed, toggle the relay's state.
+    if (digitalRead(button2) == LOW) {
+      relay2State = !relay2State; // Invert the state
+      digitalWrite(relay2, relay2State ? HIGH : LOW); // Update the relay
+      Serial.print("Relay 2 toggled to: ");
+      Serial.println(relay2State ? "ON" : "OFF");
+      // Wait for the button to be released.
+      while(digitalRead(button2) == LOW); 
+    }
+  }
+}
